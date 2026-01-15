@@ -1,59 +1,49 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Warna untuk tampilan
+# Warna
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 clear
 echo -e "${CYAN}==========================================${NC}"
-echo -e "${GREEN}       WEB STORE AUTO INSTALLER          ${NC}"
+echo -e "${GREEN}       INSTALLING WEB STORE...           ${NC}"
 echo -e "${CYAN}==========================================${NC}"
 
-# 1. Nama Store
+# 1. Ambil Input (Sama seperti sebelumnya)
 read -p "Apa nama store: " STORE_NAME
-
-# 2. Pakasir Setup
-read -p "Auto setup pakasir? (yes/no): " SETUP_PAKASIR
+read -p "Auto setup Pakasir? (yes/no): " SETUP_PAKASIR
 if [[ $SETUP_PAKASIR == "yes" ]]; then
     read -p "Masukkan API Pakasir: " API_PAKASIR
 fi
-
-# 3. Item & Harga
 read -p "Berapa banyak item yang dijual: " JML_ITEM
-declare -a HARGA_ITEMS
-for ((i=1; i<=JML_ITEM; i++)); do
-    read -p "Harga item ke-$i: " HARGA
-    HARGA_ITEMS+=("$HARGA")
-done
-
-# 4. Support Chat
 read -p "Support chat (Contoh: Wa.me/628xxx): " SUPPORT_CHAT
+read -p "Sistem login Firebase? (yes/no): " LOGIN_SYSTEM
 
-# 5. Firebase Setup
-read -p "Sistem login? (yes/no): " LOGIN_SYSTEM
-if [[ $LOGIN_SYSTEM == "yes" ]]; then
-    echo -e "${CYAN}--- Masukkan Detail Firebase ---${NC}"
-    read -p "Firebase API Key: " FB_API
-    read -p "Firebase Project ID: " FB_ID
-    read -p "Firebase Messaging Sender ID: " FB_SENDER
-fi
+# 2. Install Dependencies (Web Server sederhana)
+echo -e "\n${CYAN}[1/3] Memasang Dependencies...${NC}"
+pkg install php -y  # Kita pakai PHP untuk server lokal yang ringan
 
-# --- PROSES PEMBUATAN FILE KONFIGURASI ---
-echo -e "\n${GREEN}Sedang menyusun konfigurasi...${NC}"
+# 3. Download Template Website
+echo -e "${CYAN}[2/3] Mendownload file HTML/CSS/JS...${NC}"
+# Kita buat folder store
+mkdir -p my_store
+cd my_store
 
-# Membuat file .env atau config.json
-cat <<EOF > config.env
-STORE_NAME="$STORE_NAME"
-API_PAKASIR="$API_PAKASIR"
-TOTAL_ITEMS="$JML_ITEM"
-ITEM_PRICES="${HARGA_ITEMS[*]}"
-SUPPORT_LINK="$SUPPORT_CHAT"
-FB_API_KEY="$FB_API"
-FB_PROJECT_ID="$FB_ID"
-FB_SENDER_ID="$FB_SENDER"
-EOF
+# Download file HTML (Template)
+curl -O https://raw.githubusercontent.com/BalRpehh/store-web-installer/main/index.html
 
-echo -e "${GREEN}Setup Selesai! File 'config.env' telah dibuat.${NC}"
-echo -e "Sekarang jalankan perintah web store kamu (misal: npm start)"
+# 4. Inject data user ke dalam file HTML (Otomatisasi)
+echo -e "${CYAN}[3/3] Mengonfigurasi Web Store...${NC}"
+
+# Mengganti placeholder di index.html dengan input user menggunakan 'sed'
+sed -i "s/{{STORE_NAME}}/$STORE_NAME/g" index.html
+sed -i "s|{{SUPPORT_CHAT}}|$SUPPORT_CHAT|g" index.html
+
+echo -e "\n${GREEN}==========================================${NC}"
+echo -e "${GREEN}      INSTALLASI BERHASIL!               ${NC}"
+echo -e "${GREEN}==========================================${NC}"
+echo -e "Silakan jalankan perintah ini untuk buka store:"
+echo -e "${CYAN}cd my_store && php -S localhost:8080${NC}"
+echo -e "Lalu buka browser di: http://localhost:8080"
 
